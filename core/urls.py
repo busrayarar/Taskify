@@ -23,6 +23,7 @@ from rest_framework_simplejwt.views import (
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from django.urls import path
 from tasks import views
+from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -30,6 +31,6 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-#     path('users/', views.members, name = 'users'),
+    path('api/', include('tasks.urls')), #api ile başlıyor ve tasks.urls dosyasına yönlendiriyor
 ]
 
