@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-0b*+lb3-7dvz)%tiuog$am4=#i2we8%$ac&%5h54hwa^)rtd82
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -90,7 +90,7 @@ DATABASES = {
         'NAME': os.getenv('DB_NAME', 'taskify_db'),
         'USER': os.getenv('DB_USER', 'postgres'),
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'HOST': os.getenv('DB_HOST','db'),
         'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
