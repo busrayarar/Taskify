@@ -14,7 +14,7 @@ services:
 
     backend:
         build: ./taskify_backend
-        command: python manage.py runserver 0.0.0.0:8000
+        command: sh -c "python manage.py migrate && python manage.py createsuperuser --noinput || true; python manage.py runserver 0.0.0.0:8000"
         volumes:
             - ./taskify_backend:/app
         ports:
@@ -27,6 +27,9 @@ services:
             - DB_USER=${DB_USER}
             - DB_PASSWORD=${DB_PASSWORD}
             - DB_PORT=5432
+            - DJANGO_SUPERUSER_USERNAME=admin
+            - DJANGO_SUPERUSER_EMAIL=admin@taskify.com
+            - DJANGO_SUPERUSER_PASSWORD=${DJANGO_ADMIN_PASSWORD}
 
     frontend:
         build: ./taskify_frontend
