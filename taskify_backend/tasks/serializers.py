@@ -47,6 +47,7 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = ('id', 'task_name', 'task_description', 'state', 'user', 'created_at', 'updated_at')
         read_only_fields = ['created_at']
+        extra_kwargs = {'user': {'required': False}}
 
     def validate_state(self,value):
         valid_states = ['TODO', 'IN_PROGRESS', 'DONE']
@@ -59,9 +60,11 @@ class TaskSerializer(serializers.ModelSerializer):
     def validate(self,data):
         request = self.context.get('request')
         if 'user' in data:
-            if self.instance is None:
-                data.pop('user', None)
-            elif not (request and request.user.is_staff):
+            is_admin = bool(request and request.user.is_staff)
+            if self.instance is None:          # yeni task oluşturuluyor
+                if not is_admin:
+                    data.pop('user', None)      # admin değilse sil, adminse dokunma
+            elif not is_admin:                  # var olan task güncelleniyor
                 raise serializers.ValidationError({
                     "user": "Sadece admin görevleri atayabilir."
                 })
