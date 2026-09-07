@@ -14,6 +14,7 @@ class IsOwnerAdminOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj): #istek atan kişi kim - hangi viewset - o an işlem yapılmak istenen obje 
         if request.method in permissions.SAFE_METHODS: # değişmeten veriler readonly olanlara istek dönerse direkt true döner
             return True
+        owner = getattr(obj, 'user', None) or getattr(obj, 'author', None)
         return bool(request.user and (request.user.is_staff or obj.user == request.user)) # istek readonly değilse değişebilirse istek atan user var mı bu user admin mi veya user task sahibi mi bu ikisinden biriyse true döner
 
 # sadece admin görebilir
@@ -53,4 +54,4 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 # yorumu atan user sahibi 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user) 
+        serializer.save(author=self.request.user) 
