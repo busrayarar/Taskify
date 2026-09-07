@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+    db:
+        image: postgres:15-alpine
+        environment:
+            POSTGRES_DB: taskify_db
+            POSTGRES_USER: ${DB_USER}
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        ports:
+            - "5433:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+
+    backend:
+        build: ./taskify_backend
+        command: python manage.py runserver 0.0.0.0:8000
+        volumes:
+            - ./taskify_backend:/app
+        ports:
+            - "8000:8000"
+        depends_on:
+            - db
+        environment:
+            - DB_HOST=db
+            - DB_NAME=taskify_db
+            - DB_USER=${DB_USER}
+            - DB_PASSWORD=${DB_PASSWORD}
+            - DB_PORT=5432
+
+    frontend:
+        build: ./taskify_frontend
+        volumes:
+            - ./taskify_frontend:/app
+            - /app/node_modules
+        ports:
+            - "5173:5173"
+        depends_on:
+            - backend
+
+volumes:
+    postgres_data:
