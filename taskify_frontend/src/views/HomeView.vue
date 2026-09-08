@@ -1,5 +1,7 @@
 <script setup></script>
 
 <template>
-    <router-view />
+    <div>
+        <h1>ANASAYFA</h1>
+    </div>
 </template>
