@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { useAuthStore } from "../stores/auth";
 
 const routes = [
     {
@@ -26,6 +27,16 @@ const routes = [
 const router = createRouter({
     history: createWebHistory(),
     routes,
+});
+
+router.beforeEach((to, from, next) => {
+    //her sayfa geçişinde beforeEach çalışır - login kontrolü için
+    const authStore = useAuthStore();
+    if (to.name !== "Login" && !authStore.isLoggedIn) {
+        next({ name: "Login" }); //login değilse - giriş yapmamışsa logine yönlendir
+    } else {
+        next();
+    }
 });
 
 export default router;
