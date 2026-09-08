@@ -1,5 +1,7 @@
 <script setup></script>
 
 <template>
-    <router-view />
+    <div>
+        <h1>GÖREVLER</h1>
+    </div>
 </template>
