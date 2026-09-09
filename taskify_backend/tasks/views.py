@@ -8,6 +8,8 @@ from django.contrib.auth.models import User
 from .models import Task, Comment
 from .serializers import UserSerializer, TaskSerializer, CommentSerializer
 from rest_framework import filters, viewsets, permissions
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import CustomTokenObtainPairSerializer
 
 # sadece taskı açan user veya admin düzenleyebilir - user silemez 
 class IsOwnerAdminOrReadOnly(permissions.BasePermission):
@@ -55,3 +57,6 @@ class CommentViewSet(viewsets.ModelViewSet):
 # yorumu atan user sahibi 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user) 
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Task, Comment
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class UserSerializer(serializers.ModelSerializer):
     password_confirm = serializers.CharField(write_only=True)
@@ -76,3 +77,9 @@ class TaskSerializer(serializers.ModelSerializer):
             })
         return data
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):  #admin mi kullanıcı mı görüyoruz tokenı üretip dönen datadan kontrol
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data['username'] = self.user.username
+        data['is_staff'] = self.user.is_staff
+        return data
