@@ -17,7 +17,7 @@ class IsOwnerAdminOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS: # değişmeten veriler readonly olanlara istek dönerse direkt true döner
             return True
         owner = getattr(obj, 'user', None) or getattr(obj, 'author', None)
-        return bool(request.user and (request.user.is_staff or obj.user == request.user)) # istek readonly değilse değişebilirse istek atan user var mı bu user admin mi veya user task sahibi mi bu ikisinden biriyse true döner
+        return bool(request.user and (request.user.is_staff or owner == request.user)) # istek readonly değilse değişebilirse istek atan user var mı bu user admin mi veya user task sahibi mi bu ikisinden biriyse true döner
 
 # sadece admin görebilir
 class UserViewSet(viewsets.ModelViewSet): #model ve serializer alıp crud rotalarını hazırlıyoruz
