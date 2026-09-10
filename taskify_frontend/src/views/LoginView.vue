@@ -68,7 +68,12 @@ async function handleLogin() {
         });
         const isAdmin = response.data.is_staff || false;
 
-        authStore.setAuth(response.data.access, username.value, isAdmin);
+        authStore.setAuth(
+            response.data.access,
+            username.value,
+            response.data.user_id,
+            isAdmin,
+        );
         router.push({ name: "Home" });
     } catch (error) {
         errorMessage.value = "Kullanıcı adı veya şifre hatalı.";
