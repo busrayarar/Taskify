@@ -10,6 +10,8 @@ from .serializers import UserSerializer, TaskSerializer, CommentSerializer
 from rest_framework import filters, viewsets, permissions
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import CustomTokenObtainPairSerializer
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 # sadece taskı açan user veya admin düzenleyebilir - user silemez 
 class IsOwnerAdminOrReadOnly(permissions.BasePermission):
@@ -47,6 +49,20 @@ class TaskViewSet(viewsets.ModelViewSet):
             serializer.save(user=self.request.user) 
         else:
             serializer.save()
+
+    @action(detail=False, methods=['get']) #endpoint
+    def stats(self, request):
+        if request.user.is_staff: #adminse tüm tasklar
+            queryset = Task.objects.all()
+        else: #değilse sadece kendi taskı
+            queryset = Task.objects.filter(user=request.user)
+
+        data = { # kaç task olduğunu sayıyo
+            'TODO': queryset.filter(state='TODO').count(),
+            'IN_PROGRESS': queryset.filter(state='IN_PROGRESS').count(),
+            'DONE': queryset.filter(state='DONE').count(), 
+        }
+        return Response(data) #sonucu json dön 
 
 # yorumlar herkes görebilir
 class CommentViewSet(viewsets.ModelViewSet):

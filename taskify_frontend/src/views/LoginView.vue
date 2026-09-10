@@ -16,6 +16,7 @@
                             label="Şifre"
                             type="password"
                             required
+                            name="password1"
                         />
 
                         <v-alert
