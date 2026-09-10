@@ -9,6 +9,8 @@ const addDialog = ref(false);
 const saving = ref(false);
 const addError = ref("");
 const fieldErrors = ref({});
+const editMode = ref(false);
+const editingUserId = ref(null);
 const newUser = ref({
     username: "",
     first_name: "",
@@ -22,7 +24,6 @@ const userToDelete = ref(null);
 const deleting = ref(false);
 
 const headers = [
-    //tablo sütunları
     { title: "Kullanıcı Adı", key: "username" },
     { title: "Ad", key: "first_name" },
     { title: "Soyad", key: "last_name" },
@@ -31,7 +32,6 @@ const headers = [
 ];
 
 async function fetchUsers() {
-    //get api users isteği
     loading.value = true;
     try {
         const response = await api.get("/users/", {
@@ -58,23 +58,51 @@ function openAddDialog() {
         password: "",
         password_confirm: "",
     };
+    editMode.value = false;
+    editingUserId.value = null;
     fieldErrors.value = {};
+    addError.value = "";
     addDialog.value = true;
 }
 
-async function handleAddUser() {
+function openEditDialog(user) {
+    newUser.value = {
+        username: user.username,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        password: "",
+        password_confirm: "",
+    };
+    editMode.value = true;
+    editingUserId.value = user.id;
+    fieldErrors.value = {};
+    addError.value = "";
+    addDialog.value = true;
+}
+
+async function handleSaveUser() {
     fieldErrors.value = {};
     saving.value = true;
     addError.value = "";
     try {
-        await api.post("/users/", newUser.value);
+        if (editMode.value) {
+            const payload = { ...newUser.value };
+            if (!payload.password) {
+                delete payload.password;
+                delete payload.password_confirm;
+            }
+            await api.patch(`/users/${editingUserId.value}/`, payload);
+        } else {
+            await api.post("/users/", newUser.value);
+        }
         addDialog.value = false;
         fetchUsers();
     } catch (error) {
         if (error.response && error.response.data) {
             fieldErrors.value = error.response.data;
         } else {
-            addError.value = "Kullanıcı eklenirken bir hata oluştu.";
+            addError.value = "İşlem sırasında bir hata oluştu.";
         }
     } finally {
         saving.value = false;
@@ -128,6 +156,12 @@ onMounted(() => {
         <v-data-table :headers="headers" :items="users" :loading="loading">
             <template v-slot:item.actions="{ item }">
                 <v-btn
+                    icon="mdi-pencil"
+                    size="small"
+                    variant="text"
+                    @click="openEditDialog(item)"
+                />
+                <v-btn
                     icon="mdi-delete"
                     size="small"
                     color="error"
@@ -138,7 +172,9 @@ onMounted(() => {
         </v-data-table>
         <v-dialog v-model="addDialog" max-width="700">
             <v-card>
-                <v-card-title>Kullanıcı Ekle</v-card-title>
+                <v-card-title>{{
+                    editMode ? "Kullanıcı Düzenle" : "Kullanıcı Ekle"
+                }}</v-card-title>
                 <v-card-text>
                     <v-form ref="formRef">
                         <v-text-field
@@ -173,7 +209,13 @@ onMounted(() => {
                             v-model="newUser.password"
                             label="Şifre"
                             type="password"
-                            required
+                            :required="!editMode"
+                            :hint="
+                                editMode
+                                    ? 'Değiştirmek istemiyorsan boş bırak'
+                                    : ''
+                            "
+                            persistent-hint
                             :error-messages="fieldErrors.password"
                         />
 
@@ -181,7 +223,7 @@ onMounted(() => {
                             v-model="newUser.password_confirm"
                             label="Şifre Tekrar"
                             type="password"
-                            required
+                            :required="!editMode"
                             :error-messages="fieldErrors.password_confirm"
                         />
 
@@ -201,7 +243,7 @@ onMounted(() => {
                     <v-btn
                         color="primary"
                         :loading="saving"
-                        @click="handleAddUser"
+                        @click="handleSaveUser"
                         >Kaydet</v-btn
                     >
                 </v-card-actions>
