@@ -4,16 +4,17 @@ from .models import Task, Comment
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class UserSerializer(serializers.ModelSerializer):
-    password_confirm = serializers.CharField(write_only=True)
+    password_confirm = serializers.CharField(write_only=True, error_messages={'required': 'Şifre tekrarı zorunludur.', 'blank': 'Şifre tekrarı zorunludur.'})
 
     class Meta:
         model=User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password', 'password_confirm']
         extra_kwargs = {
-            'password': {'write_only':True},
-            'email': {'required': True},
-            'first_name': {'required': True},
-            'last_name': {'required': True},
+            'first_name': {'required': True, 'allow_blank': False, 'error_messages': {'required': 'Ad zorunludur.', 'blank': 'Ad zorunludur.'}},
+            'last_name': {'required': True, 'allow_blank': False, 'error_messages': {'required': 'Soyad zorunludur.', 'blank': 'Soyad zorunludur.'}},
+            'username': {'allow_blank': False, 'error_messages': {'required': 'Kullanıcı adı zorunludur.', 'blank': 'Kullanıcı adı zorunludur.'}},
+            'email': {'required': True, 'allow_blank': False, 'error_messages': {'required': 'Email zorunludur.', 'blank': 'Email zorunludur.'}},
+            'password': {'write_only': True, 'error_messages': {'required': 'Şifre zorunludur.', 'blank': 'Şifre zorunludur.'}},
             }
     
     def validate_email(self, value):
