@@ -2,16 +2,24 @@
 import { ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "./stores/auth";
+import { useTheme } from "vuetify";
 
 const drawer = ref(true);
 const rail = ref(true);
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const theme = useTheme();
 
 function handleLogout() {
     authStore.logout();
     router.push({ name: "Login" });
+}
+
+function toggleTheme() {
+    theme.global.name.value = theme.global.current.value.dark
+        ? "light"
+        : "dark";
 }
 </script>
 
@@ -54,6 +62,14 @@ function handleLogout() {
             <v-app-bar>
                 <v-toolbar-title>Taskify</v-toolbar-title>
                 <v-spacer />
+                <v-btn
+                    :icon="
+                        theme.global.current.value.dark
+                            ? 'mdi-weather-sunny'
+                            : 'mdi-weather-night'
+                    "
+                    @click="toggleTheme"
+                />
                 <v-btn @click="handleLogout">Çıkış Yap</v-btn>
             </v-app-bar>
 
