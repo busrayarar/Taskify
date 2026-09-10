@@ -43,9 +43,10 @@ const openDeleteCommentDialog = (id) => {
 // Penceredeki "Evet, Sil" butonuna tıklanınca çalışacak fonksiyon
 const confirmDeleteComment = async () => {
     if (commentToDeleteId.value) {
-        // Senin mevcut yorum silme fonksiyonunu ID ile çağırıyoruz
+
+        // Yorum silme fonksiyonu ID ile çağırıyoruz
         await deleteComment(commentToDeleteId.value);
-        // İşlem bitince popup'ı kapatıyoruz
+        // İşlem bitince popup kapat
         deleteCommentDialog.value = false;
     }
 };
@@ -291,7 +292,9 @@ onMounted(() => {
             </v-card>
         </v-dialog>
 
-        <!-- YENİ YAN YANA DETAY VE YORUM PENCERESİ -->
+
+        <!-- YAN YANA DETAY VE YORUM PENCERESİ -->
+
         <v-dialog v-model="detailDialog" max-width="1000">
             <v-card>
                 <v-card-title class="text-h5 pb-3">{{
