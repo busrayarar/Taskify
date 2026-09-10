@@ -43,6 +43,7 @@ const openDeleteCommentDialog = (id) => {
 // Penceredeki "Evet, Sil" butonuna tıklanınca çalışacak fonksiyon
 const confirmDeleteComment = async () => {
     if (commentToDeleteId.value) {
+
         // Yorum silme fonksiyonu ID ile çağırıyoruz
         await deleteComment(commentToDeleteId.value);
         // İşlem bitince popup kapat
@@ -131,6 +132,60 @@ async function handleAddTask() {
         saving.value = false;
     }
 }
+
+async function openDetail(task) {
+    selectedTask.value = task;
+    editTask.value = { ...task };
+    detailDialog.value = true;
+    await fetchComments(task.id);
+}
+
+async function fetchComments(taskId) {
+    const response = await api.get(`/comments/?task=${taskId}`);
+    comments.value = response.data;
+}
+
+async function handleUpdateTask() {
+    savingEdit.value = true;
+    try {
+        await api.patch(`/tasks/${selectedTask.value.id}/`, editTask.value);
+        detailDialog.value = false;
+        fetchTasks();
+    } catch (error) {
+        console.error("Görev güncellenemedi:", error);
+    } finally {
+        savingEdit.value = false;
+    }
+}
+
+async function addComment() {
+    if (!newComment.value.trim()) return;
+    await api.post("/comments/", {
+        task: selectedTask.value.id,
+        content: newComment.value,
+    });
+    newComment.value = "";
+    fetchComments(selectedTask.value.id);
+}
+
+function startEditComment(c) {
+    editingCommentId.value = c.id;
+    editingCommentContent.value = c.content;
+}
+
+async function saveCommentEdit(c) {
+    await api.patch(`/comments/${c.id}/`, {
+        content: editingCommentContent.value,
+    });
+    editingCommentId.value = null;
+    fetchComments(selectedTask.value.id);
+}
+
+async function deleteComment(id) {
+    await api.delete(`/comments/${id}/`);
+    fetchComments(selectedTask.value.id);
+}
+
 onMounted(() => {
     fetchTasks();
     fetchUsersForSelect();
@@ -155,6 +210,12 @@ onMounted(() => {
             </template>
             <template v-slot:item.actions="{ item }">
                 <v-btn
+                    icon="mdi-pencil"
+                    size="small"
+                    variant="text"
+                    @click="openDetail(item)"
+                />
+                <v-btn
                     v-if="
                         authStore.isAdmin ||
                         item.user === Number(authStore.userId)
@@ -167,31 +228,36 @@ onMounted(() => {
                 />
             </template>
         </v-data-table>
-        <v-dialog v-model="addDialog" max-width="600">
+
+        <v-dialog v-model="addDialog" max-width="1100">
             <v-card>
                 <v-card-title>Görev Ekle</v-card-title>
                 <v-card-text>
-                    <v-text-field
-                        v-model="newTask.task_name"
-                        label="Başlık"
-                        required
-                        :error-messages="fieldErrors.task_name"
-                    />
-                    <v-textarea
-                        v-model="newTask.task_description"
-                        label="Açıklama"
-                        :error-messages="fieldErrors.task_description"
-                    />
-                    <v-select
-                        v-if="authStore.isAdmin"
-                        v-model="newTask.user"
-                        :items="users"
-                        item-title="username"
-                        item-value="id"
-                        label="Kime atansın"
-                        required
-                        :error-messages="fieldErrors.user"
-                    />
+                    <v-row>
+                        <v-col cols="12" md="6">
+                            <v-text-field
+                                v-model="newTask.task_name"
+                                label="Başlık"
+                                required
+                                :error-messages="fieldErrors.task_name"
+                            />
+                            <v-textarea
+                                v-model="newTask.task_description"
+                                label="Açıklama"
+                                :error-messages="fieldErrors.task_description"
+                            />
+                            <v-select
+                                v-if="authStore.isAdmin"
+                                v-model="newTask.user"
+                                :items="users"
+                                item-title="username"
+                                item-value="id"
+                                label="Kime atansın"
+                                required
+                                :error-messages="fieldErrors.user"
+                            />
+                        </v-col>
+                    </v-row>
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer />
@@ -205,12 +271,13 @@ onMounted(() => {
                 </v-card-actions>
             </v-card>
         </v-dialog>
+
         <v-dialog v-model="deleteDialog" max-width="400">
             <v-card>
                 <v-card-title>Görevi Sil</v-card-title>
                 <v-card-text>
-                    <strong>{{ taskToDelete?.task_name }}</strong> görevini
-                    silmek istediğinize emin misiniz?
+                    Bu görevi silmek istediğinize emin misiniz? Bu işlem geri
+                    alınamaz.
                 </v-card-text>
                 <v-card-actions>
                     <v-spacer />
@@ -225,7 +292,9 @@ onMounted(() => {
             </v-card>
         </v-dialog>
 
+
         <!-- YAN YANA DETAY VE YORUM PENCERESİ -->
+
         <v-dialog v-model="detailDialog" max-width="1000">
             <v-card>
                 <v-card-title class="text-h5 pb-3">{{
