@@ -45,11 +45,19 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ['author', 'created_at']
 
 class TaskSerializer(serializers.ModelSerializer):
+    assigned_username = serializers.SerializerMethodField()
+
+    def get_assigned_username(self, obj):
+        return obj.user.username if obj.user else None
     class Meta:
         model = Task
-        fields = ('id', 'task_name', 'task_description', 'state', 'user', 'created_at', 'updated_at')
+        fields = ('id', 'task_name', 'task_description', 'state', 'user', 'assigned_username','created_at', 'updated_at')
         read_only_fields = ['created_at']
-        extra_kwargs = {'user': {'required': False}}
+        extra_kwargs = {
+            'user': {'required': False},
+            'task_name': {'error_messages': {'required': 'Başlık zorunludur.', 'blank': 'Başlık zorunludur.'}},
+            'task_description': {'error_messages': {'required': 'Açıklama zorunludur.', 'blank': 'Açıklama zorunludur.'}},
+            }
 
     def validate_state(self,value):
         valid_states = ['TODO', 'IN_PROGRESS', 'DONE']
@@ -59,10 +67,11 @@ class TaskSerializer(serializers.ModelSerializer):
             )
         return value
     
-    def validate(self,data):
+    def validate(self, data):
         request = self.context.get('request')
+        is_admin = bool(request and request.user.is_staff)
+
         if 'user' in data:
-            is_admin = bool(request and request.user.is_staff)
             if self.instance is None:          # yeni task oluşturuluyor
                 if not is_admin:
                     data.pop('user', None)      # admin değilse sil, adminse dokunma
@@ -70,11 +79,18 @@ class TaskSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     "user": "Sadece admin görevleri atayabilir."
                 })
+
+        if self.instance is None and is_admin:
+            if not data.get('user'):
+                raise serializers.ValidationError({
+                    "user": "Görev oluştururken bir kullanıcı seçmelisiniz."
+                })
+
         state = data.get('state')
         user = data.get('user', getattr(self.instance, 'user', None))
         if state == 'DONE' and user is None:
             raise serializers.ValidationError({
-                "user": " Atama yapılmamış bir görev 'Done' olarak işaretlenemez."           
+                "user": " Atama yapılmamış bir görev 'Done' olarak işaretlenemez."
             })
         return data
 
@@ -83,4 +99,5 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):  #admin mi kul
         data = super().validate(attrs)
         data['username'] = self.user.username
         data['is_staff'] = self.user.is_staff
+        data['user_id'] = self.user.id
         return data
