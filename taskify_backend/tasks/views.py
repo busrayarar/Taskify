@@ -70,6 +70,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer 
     permission_classes = [IsAuthenticated, IsOwnerAdminOrReadOnly] # girirş yapmış mı ve yorumun userı mı ya da admin mi
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        task_id = self.request.query_params.get('task')
+        if task_id:
+            queryset = queryset.filter(task_id=task_id)
+        return queryset
+
 # yorumu atan user sahibi 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user) 
