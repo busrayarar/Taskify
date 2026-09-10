@@ -1,6 +1,10 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import api from "../api";
+import { useTheme } from "vuetify";
+
+const theme = useTheme();
+const isDark = computed(() => theme.global.current.value.dark);
 
 const stats = ref({
     //başlangıçta 3 sayaç da 0 tutan reactive değişken
