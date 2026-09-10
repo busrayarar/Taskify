@@ -21,6 +21,35 @@ const deleteDialog = ref(false);
 const taskToDelete = ref(null);
 const deleting = ref(false);
 
+const detailDialog = ref(false);
+const selectedTask = ref(null);
+const editTask = ref({});
+const savingEdit = ref(false);
+const comments = ref([]);
+const newComment = ref("");
+const editingCommentId = ref(null);
+const editingCommentContent = ref("");
+
+// Yorum silme penceresi için gerekli değişkenler
+const deleteCommentDialog = ref(false);
+const commentToDeleteId = ref(null);
+
+// Çöp kutusuna tıklanınca pencereyi açan fonksiyon
+const openDeleteCommentDialog = (id) => {
+    commentToDeleteId.value = id;
+    deleteCommentDialog.value = true;
+};
+
+// Penceredeki "Evet, Sil" butonuna tıklanınca çalışacak fonksiyon
+const confirmDeleteComment = async () => {
+    if (commentToDeleteId.value) {
+        // Yorum silme fonksiyonu ID ile çağırıyoruz
+        await deleteComment(commentToDeleteId.value);
+        // İşlem bitince popup kapat
+        deleteCommentDialog.value = false;
+    }
+};
+
 function openDeleteDialog(task) {
     taskToDelete.value = task;
     deleteDialog.value = true;
@@ -190,6 +219,171 @@ onMounted(() => {
                         color="error"
                         :loading="deleting"
                         @click="handleDeleteTask"
+                        >Evet</v-btn
+                    >
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <!-- YAN YANA DETAY VE YORUM PENCERESİ -->
+        <v-dialog v-model="detailDialog" max-width="1000">
+            <v-card>
+                <v-card-title class="text-h5 pb-3">{{
+                    selectedTask?.task_name
+                }}</v-card-title>
+                <v-card-text>
+                    <v-row>
+                        <v-col cols="12" md="6" class="pr-md-4">
+                            <h3 class="mb-4">Detaylar</h3>
+
+                            <v-text-field
+                                v-model="editTask.task_name"
+                                label="Başlık"
+                                variant="outlined"
+                            />
+                            <v-textarea
+                                v-model="editTask.task_description"
+                                label="Açıklama"
+                                variant="outlined"
+                                rows="4"
+                            />
+                            <v-select
+                                v-model="editTask.state"
+                                :items="['TODO', 'IN_PROGRESS', 'DONE']"
+                                label="Durum"
+                                variant="outlined"
+                            />
+                            <v-select
+                                v-if="authStore.isAdmin"
+                                v-model="editTask.user"
+                                :items="users"
+                                item-title="username"
+                                item-value="id"
+                                label="Kime atansın"
+                                variant="outlined"
+                            />
+                            <v-btn
+                                color="primary"
+                                :loading="savingEdit"
+                                @click="handleUpdateTask"
+                                block
+                                >Güncelle</v-btn
+                            >
+                        </v-col>
+
+                        <v-col
+                            cols="12"
+                            md="6"
+                            class="pl-md-4"
+                            style="border-left: 1px solid #eee"
+                        >
+                            <h3 class="mb-4">Yorumlar</h3>
+
+                            <v-textarea
+                                v-model="newComment"
+                                label="Bir yorum yaz..."
+                                variant="outlined"
+                                rows="2"
+                            />
+                            <v-btn
+                                color="primary"
+                                @click="addComment"
+                                class="mb-4"
+                                variant="tonal"
+                                >Gönder</v-btn
+                            >
+
+                            <v-divider class="mb-4" />
+
+                            <v-list class="bg-transparent">
+                                <v-list-item
+                                    v-for="c in comments"
+                                    :key="c.id"
+                                    class="px-0 mb-2"
+                                >
+                                    <template v-if="editingCommentId === c.id">
+                                        <v-textarea
+                                            v-model="editingCommentContent"
+                                            rows="2"
+                                            variant="outlined"
+                                        />
+                                        <div class="d-flex gap-2 mt-2">
+                                            <v-btn
+                                                size="small"
+                                                color="success"
+                                                @click="saveCommentEdit(c)"
+                                                >Kaydet</v-btn
+                                            >
+                                            <v-btn
+                                                size="small"
+                                                variant="text"
+                                                @click="editingCommentId = null"
+                                                >İptal</v-btn
+                                            >
+                                        </div>
+                                    </template>
+
+                                    <template v-else>
+                                        <v-list-item-title
+                                            class="font-weight-bold text-primary"
+                                        >
+                                            {{ c.author_username }}
+                                        </v-list-item-title>
+                                        <v-list-item-subtitle
+                                            class="mt-1"
+                                            style="
+                                                white-space: pre-line;
+                                                opacity: 0.9;
+                                            "
+                                        >
+                                            {{ c.content }}
+                                        </v-list-item-subtitle>
+                                    </template>
+
+                                    <template
+                                        v-slot:append
+                                        v-if="
+                                            editingCommentId !== c.id &&
+                                            (authStore.isAdmin ||
+                                                c.author ===
+                                                    Number(authStore.userId))
+                                        "
+                                    >
+                                        <v-btn
+                                            icon="mdi-pencil"
+                                            size="small"
+                                            variant="text"
+                                            color="grey-darken-1"
+                                            @click="startEditComment(c)"
+                                        />
+                                        <v-btn
+                                            icon="mdi-delete"
+                                            size="small"
+                                            variant="text"
+                                            color="error"
+                                            @click="
+                                                openDeleteCommentDialog(c.id)
+                                            "
+                                        />
+                                    </template>
+                                </v-list-item>
+                            </v-list>
+                        </v-col>
+                    </v-row>
+                </v-card-text>
+            </v-card>
+        </v-dialog>
+        <v-dialog v-model="deleteCommentDialog" max-width="400">
+            <v-card>
+                <v-card-title>Yorumu Sil</v-card-title>
+                <v-card-text>
+                    Bu yorumu silmek istediğinize emin misiniz? Bu işlem geri
+                    alınamaz.
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer />
+                    <v-btn @click="deleteCommentDialog = false">Hayır</v-btn>
+                    <v-btn color="error" @click="confirmDeleteComment"
                         >Evet</v-btn
                     >
                 </v-card-actions>
