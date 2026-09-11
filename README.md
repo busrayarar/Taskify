@@ -114,6 +114,7 @@ Proje ana dizininde bulunan `.env.example` dosyasının adını `.env` olarak de
 DB_NAME=taskify_db
 DB_USER=taskify_user
 DB_PASSWORD=taskify_password
+DJANGO_ADMIN_PASSWORD=your_admin_password_here
 ```
 
 **3. Konteynerleri Ayağa Kaldırın**
