@@ -153,19 +153,14 @@ docker compose down -v
 
 ## Test Hesapları (Demo Credentials)
 
-Sistemi hızlıca test edebilmeniz için başlangıçta aşağıdaki varsayılan hesaplar otomatik olarak oluşturulmaktadır:
+Sistemi test edebilmeniz için başlangıçta aşağıdaki varsayılan hesap otomatik olarak oluşturulmaktadır:
 
 **Admin Hesabı (Tam Yetkili):**
 
 - **Kullanıcı Adı:** `admin`
 - **Şifre:** `A114474.min`
 
-**Standart Kullanıcı Hesabı:**
-
-- **Kullanıcı Adı:** `testim`
-- **Şifre:** `testim`
-
-> **Önemli:** Bu şifreler yalnızca yerel geliştirme ortamı içindir. Uygulamayı canlı sunucuya taşıdığınızda bu varsayılan şifreleri değiştirin.
+> **Önemli:** Bu şifre yalnızca yerel geliştirme ortamı içindir. Uygulamayı canlı sunucuya taşıdığınızda bu varsayılan şifreyi değiştirin.
 
 ## API Endpoints
 
